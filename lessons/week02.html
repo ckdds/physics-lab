@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>2주차 · 자유 이동하는 공 — Physics Lab</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%232a62c9'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <p class="module-notice" role="alert">
+      이 교안은 로컬 서버에서 열어야 실험실이 동작합니다. README의 “실행 방법”을 확인하세요.
+    </p>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html">Physics <span>Lab</span></a>
+        <div class="topbar-meta">
+          <span>2주차 · 자유 이동하는 공</span>
+          <span class="badge" data-complete-label data-state="progress">진행 중</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="lesson-layout">
+      <nav class="toc" aria-label="교안 목차">
+        <div class="toc-title">이번 수업 순서</div>
+        <div data-toc></div>
+      </nav>
+
+      <main class="lesson-main">
+        <!-- 1. 수업 헤더 -->
+        <header class="lesson-header">
+          <p class="eyebrow" data-part-label>Part 1. 물리 시뮬레이션 기초</p>
+          <h1>2주차 · 자유 이동하는 공</h1>
+          <div class="lesson-meta">
+            <span>예상 시간 <strong>120분</strong></span>
+            <span>핵심 개념: 위치, 속도, 방향, 벡터</span>
+            <span>결과물: 자유 이동하는 공</span>
+          </div>
+          <ol class="timeline" aria-label="120분 수업 배분">
+            <li style="flex: 15"><strong>15분</strong>관찰·예측</li>
+            <li style="flex: 25"><strong>25분</strong>원리·코드</li>
+            <li style="flex: 50"><strong>50분</strong>실험·AI 협업·직접 구현</li>
+            <li style="flex: 20"><strong>20분</strong>자유 실험</li>
+            <li style="flex: 10"><strong>10분</strong>정리</li>
+          </ol>
+          <nav class="week-nav" aria-label="주차 이동" data-week-nav></nav>
+          <p class="message" data-kind="warn" data-storage-warning hidden>
+            이 브라우저에서는 기록을 저장할 수 없어 새로고침하면 사라집니다. 마무리 전에 “기록 내보내기”를 사용하세요.
+          </p>
+        </header>
+
+        <!-- 2. 오늘의 학습 목표 -->
+        <section id="goals" aria-labelledby="goals-title">
+          <h2 id="goals-title" data-short="학습 목표">오늘의 학습 목표</h2>
+          <ul class="goal-list">
+            <li>위치를 <code>(x, y)</code>, 속도를 <code>(vx, vy)</code> 두 값으로 나타낼 수 있다.</li>
+            <li>vx·vy의 <strong>부호</strong>를 보고 공이 Canvas에서 어느 방향으로 움직일지 예측할 수 있다.</li>
+            <li>속도를 화살표(벡터)로 그리고, 화살표의 길이가 <strong>속력</strong>이라는 것을 설명할 수 있다.</li>
+            <li>키보드 입력으로 속도를 바꾸는 코드를 읽고 수정할 수 있다.</li>
+          </ul>
+        </section>
+
+        <!-- 3. 관찰과 예측 -->
+        <section id="observe" aria-labelledby="observe-title">
+          <h2 id="observe-title" data-short="관찰과 예측">관찰과 예측</h2>
+          <p>
+            지난주의 공은 오른쪽으로만 움직였습니다. 하지만 게임 속 캐릭터는 위·아래·대각선 어디로든 움직입니다. 어느 방향으로든
+            움직이게 하려면 속도를 <strong>가로 성분</strong>과 <strong>세로 성분</strong>으로 나누어 생각하면 됩니다.
+          </p>
+          <div class="callout is-predict">
+            <p class="callout-title">예측 질문</p>
+            <ol>
+              <li><code>vx = 150</code>, <code>vy = -100</code>이면 공은 Canvas에서 어느 방향으로 움직일까요?</li>
+              <li>키보드 조종에서 <kbd>→</kbd>와 <kbd>↓</kbd>를 <strong>동시에</strong> 누르면, 한 키만 누를 때보다 빠를까요, 같을까요?</li>
+            </ol>
+          </div>
+          <div class="field">
+            <label for="prediction">나의 예측
+              <span class="hint">이유를 함께 적어 보세요. 이 내용은 학습 기록에 함께 저장됩니다.</span>
+            </label>
+            <textarea id="prediction" data-record-field="prediction" rows="3" maxlength="4000"></textarea>
+          </div>
+        </section>
+
+        <!-- 4. 핵심 물리 개념 -->
+        <section id="concept" aria-labelledby="concept-title">
+          <h2 id="concept-title" data-short="핵심 개념">핵심 물리 개념</h2>
+
+          <div class="concept-grid">
+            <div class="concept-card">
+              <h3>① 속도를 두 방향으로 나누기</h3>
+              <svg class="diagram" viewBox="0 0 260 170" role="img" aria-label="속도 벡터 v를 가로 성분 vx와 세로 성분 vy로 나눈 그림">
+                <rect x="0" y="0" width="260" height="170" rx="8" fill="#0f1b33" />
+                <circle cx="40" cy="135" r="11" fill="#4fb3ff" stroke="#fff" stroke-width="2" />
+                <line x1="40" y1="135" x2="200" y2="135" stroke="#ffad4d" stroke-width="3" />
+                <polygon points="208,135 196,129 196,141" fill="#ffad4d" />
+                <text x="105" y="157" fill="#ffad4d" font-size="13" font-weight="700">vx = 160</text>
+                <line x1="208" y1="135" x2="208" y2="27" stroke="#ff7b9c" stroke-width="3" />
+                <polygon points="208,18 202,30 214,30" fill="#ff7b9c" />
+                <text x="214" y="82" fill="#ff7b9c" font-size="13" font-weight="700">vy</text>
+                <text x="214" y="98" fill="#ff7b9c" font-size="13" font-weight="700">= −120</text>
+                <line x1="40" y1="135" x2="200" y2="24" stroke="#7dffb0" stroke-width="4" />
+                <polygon points="208,18 194,20 201,31" fill="#7dffb0" />
+                <text x="70" y="70" fill="#7dffb0" font-size="13" font-weight="700">속도 v (속력 200)</text>
+              </svg>
+              <p>초록 화살표(속도)는 주황(가로) 화살표와 분홍(세로) 화살표를 이어 붙인 것과 같습니다.</p>
+            </div>
+
+            <div class="concept-card">
+              <h3>② 부호가 방향을 알려 준다</h3>
+              <table class="unit-table">
+                <caption class="visually-hidden">속도 성분의 부호와 Canvas에서의 방향</caption>
+                <thead>
+                  <tr><th>값</th><th>Canvas에서 방향</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>vx &gt; 0</code></td><td>오른쪽</td></tr>
+                  <tr><td><code>vx &lt; 0</code></td><td>왼쪽</td></tr>
+                  <tr><td><code>vy &gt; 0</code></td><td><strong>아래</strong></td></tr>
+                  <tr><td><code>vy &lt; 0</code></td><td><strong>위</strong></td></tr>
+                </tbody>
+              </table>
+              <p class="muted">Canvas는 y가 아래로 커지므로, 위로 가려면 vy가 <strong>음수</strong>여야 합니다. 수학 그래프와 반대입니다.</p>
+            </div>
+
+            <div class="concept-card">
+              <h3>③ 벡터와 속력</h3>
+              <p><strong>벡터</strong>는 크기와 방향을 함께 가진 양이고, 화살표로 그립니다. 속도 벡터의 <strong>길이</strong>가 속력(빠르기)입니다.</p>
+              <p class="formula">속력 = √(vx² + vy²)</p>
+              <p>
+                가로·세로 화살표가 직각삼각형의 두 변이 되고, 속도 화살표는 빗변입니다. 코드에서는
+                <code>Math.hypot(vx, vy)</code>가 이 길이를 계산합니다. 공식을 외우기보다 “화살표 길이”로 기억하세요.
+              </p>
+            </div>
+          </div>
+
+          <h3>위치는 두 방향으로 따로 바뀐다</h3>
+          <p class="formula">x += vx * dt<br />y += vy * dt</p>
+          <p>
+            1주차의 <code>x += speed * dt</code>를 세로 방향에도 똑같이 적용합니다. 예) vx = 160, vy = −120 px/s로 1초가 지나면 공은
+            오른쪽으로 160 px, 위로 120 px 이동해서 대각선으로 200 px 떨어진 곳에 있습니다.
+          </p>
+
+          <h3>대각선이 더 빠른 문제</h3>
+          <p>
+            키보드로 조종할 때 <kbd>→</kbd>는 방향 (1, 0), <kbd>→</kbd>+<kbd>↓</kbd>는 방향 (1, 1)이 됩니다. (1, 1) 화살표의 길이는 약
+            1.41이라서 그대로 속력을 곱하면 대각선이 약 1.41배 빠릅니다. 방향 화살표를 <strong>길이 1로 맞추는 것</strong>(정규화)이 해결 방법입니다.
+          </p>
+
+          <div class="callout is-assume">
+            <p class="callout-title">이 실험의 가정과 단순화</p>
+            <ul>
+              <li>이번 주에는 공에 힘이 작용하지 않아서, 손대지 않으면 속도가 그대로 유지됩니다(등속 운동).</li>
+              <li>화면 끝을 벗어나면 반대편에서 나타납니다. 벽에 부딪히는 것은 4주차에 다룹니다.</li>
+              <li>화살표는 속도 1 px/s를 0.5 px 길이로 그립니다(그림 배율). 단위는 px, px/s이며 실제 m, m/s가 아닙니다.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- 5. 인터랙티브 실험실 -->
+        <section id="lab" aria-labelledby="lab-title">
+          <h2 id="lab-title" data-short="실험실">인터랙티브 실험실</h2>
+          <p>
+            슬라이더로 vx, vy를 바꾸면 화살표와 공의 움직임이 바로 바뀝니다. <strong>키보드 조종</strong>을 켜면 캔버스를 클릭한 뒤
+            화살표 키로 공을 움직일 수 있습니다. 옅은 점은 0.25초마다 남긴 발자국입니다.
+          </p>
+
+          <div class="lab" data-lab>
+            <div class="lab-stage">
+              <canvas tabindex="0" aria-label="속도 화살표를 단 공이 움직이는 실험 화면. 키보드 조종 모드에서는 화살표 키로 조종합니다. 오른쪽 패널에 같은 정보가 숫자로 표시됩니다."></canvas>
+              <div class="lab-toolbar">
+                <button type="button" class="btn" data-action="start">▶ 시작</button>
+                <button type="button" class="btn btn-ghost" data-action="pause">⏸ 일시정지</button>
+                <button type="button" class="btn btn-ghost" data-action="resume">⏵ 재개</button>
+                <button type="button" class="btn btn-ghost" data-action="restart" title="지금 설정으로 가운데에서 다시 실행">↻ 재시작</button>
+                <button type="button" class="btn btn-ghost" data-action="reset" title="모든 값을 기본값으로 되돌림">⟲ 초기화</button>
+                <span class="sim-status" data-sim-status aria-live="polite">시작 전</span>
+              </div>
+            </div>
+
+            <div class="lab-panel">
+              <div class="panel-box">
+                <h3>속도 조절</h3>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="vx">가로 속도 vx</label>
+                    <output for="vx">160 px/s</output>
+                  </div>
+                  <input type="range" id="vx" min="-300" max="300" step="10" value="160" />
+                </div>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="vy">세로 속도 vy</label>
+                    <output for="vy">-120 px/s</output>
+                  </div>
+                  <input type="range" id="vy" min="-300" max="300" step="10" value="-120" />
+                  <p class="hint">음수 = 위쪽, 양수 = 아래쪽</p>
+                </div>
+                <label class="check"><input type="checkbox" id="show-components" checked />가로·세로 성분 화살표 보이기</label>
+              </div>
+
+              <div class="panel-box">
+                <h3>키보드 조종</h3>
+                <label class="check"><input type="checkbox" id="keyboard-mode" />키보드로 조종하기</label>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="key-speed">키보드 속력</label>
+                    <output for="key-speed">200 px/s</output>
+                  </div>
+                  <input type="range" id="key-speed" min="50" max="400" step="10" value="200" />
+                </div>
+                <label class="check"><input type="checkbox" id="diagonal-fix" />대각선 속력 보정(정규화)</label>
+              </div>
+
+              <div class="panel-box">
+                <h3>측정값</h3>
+                <dl class="readouts">
+                  <dt>경과 시간</dt><dd data-out="time">0.00 s</dd>
+                  <dt>위치 x</dt><dd data-out="x">—</dd>
+                  <dt>위치 y</dt><dd data-out="y">—</dd>
+                  <dt>속도 vx</dt><dd data-out="vx">—</dd>
+                  <dt>속도 vy</dt><dd data-out="vy">—</dd>
+                  <dt>속력 |v|</dt><dd data-out="speed">—</dd>
+                  <dt>방향</dt><dd data-out="direction">—</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. 핵심 코드 분석 -->
+        <section id="code" aria-labelledby="code-title">
+          <h2 id="code-title" data-short="코드 분석">핵심 코드 분석</h2>
+          <p>아래 코드는 위 실험실에서 <strong>실제로 실행되는 코드</strong>를 파일에서 그대로 불러온 것입니다.</p>
+
+          <h3>① 두 방향의 위치 계산</h3>
+          <div class="code-block">
+            <div class="code-head">
+              <span data-file-label>simulations/week02.js</span>
+              <button type="button" class="btn btn-ghost btn-small" data-copy-target="code-update">복사</button>
+            </div>
+            <pre id="code-update" data-src="../simulations/week02.js" data-region="update"><code>코드를 불러오는 중…</code></pre>
+          </div>
+          <div class="code-notes">
+            <div>
+              <h4>중요한 줄</h4>
+              <ul>
+                <li>x와 y는 서로 영향을 주지 않고 <strong>따로</strong> 계산됩니다.</li>
+                <li>반대편으로 옮기는 조건 네 개는 각각 오른쪽·왼쪽·아래·위 끝을 검사합니다.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>값을 바꾸면?</h4>
+              <ul>
+                <li>vy만 0으로 → 1주차처럼 가로로만 움직입니다.</li>
+                <li>vx와 vy를 모두 −1배 → 같은 빠르기로 정반대 방향으로 갑니다.</li>
+                <li>vx와 vy를 모두 2배 → 방향은 같고 속력이 2배가 됩니다.</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>② 키보드로 속도 정하기</h3>
+          <div class="code-block">
+            <div class="code-head">
+              <span data-file-label>simulations/week02.js</span>
+              <button type="button" class="btn btn-ghost btn-small" data-copy-target="code-keyboard">복사</button>
+            </div>
+            <pre id="code-keyboard" data-src="../simulations/week02.js" data-region="keyboard"><code>코드를 불러오는 중…</code></pre>
+          </div>
+          <div class="code-notes">
+            <div>
+              <h4>중요한 줄</h4>
+              <ul>
+                <li><code>keys.up</code>일 때 <code>dirY -= 1</code>: 위로 가려면 y가 줄어야 합니다.</li>
+                <li><code>Math.hypot(dirX, dirY)</code>: 방향 화살표의 길이입니다. 이 값으로 나누면 길이가 1이 됩니다.</li>
+                <li><code>length &gt; 0</code> 검사: 아무 키도 누르지 않았을 때 0으로 나누는 것을 막습니다.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>생각해 보기</h4>
+              <ul>
+                <li>→와 ←를 동시에 누르면 어떻게 될까요? 코드를 읽고 예측한 뒤 확인해 보세요.</li>
+                <li>보정을 켜고 대각선으로 움직일 때 측정값의 속력은 얼마인가요?</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. 직접 구현 미션 -->
+        <section id="mission" aria-labelledby="mission-title">
+          <h2 id="mission-title" data-short="구현 미션">직접 구현 미션</h2>
+          <p>
+            출발 코드 <code>starter/week02/</code>의 <code>main.js</code>를 수정합니다. 수정한 뒤
+            <a href="../starter/week02/index.html" target="_blank" rel="noopener">출발 코드 실행 화면 열기 ↗</a>에서 새로고침해
+            확인하세요. 지금 출발 코드의 공은 가로로만 움직입니다.
+          </p>
+
+          <div class="missions">
+            <article class="mission" data-level="basic">
+              <p class="mission-level">기초 미션</p>
+              <h3>세로 방향 움직임 추가하기</h3>
+              <p><code>TODO 1</code>, <code>TODO 2</code>를 완성해 공이 vx, vy에 따라 대각선으로도 움직이고, 위·아래 끝을 벗어나면 반대편에서 나타나게 합니다.</p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li><code>vy</code>를 음수로 바꾸면 공이 위로 움직인다.</li>
+                  <li>공이 네 방향 어느 끝으로 나가도 반대편에서 다시 나타난다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — 가로 방향 코드를 보세요</summary>
+                <p>이미 있는 x 방향 코드와 같은 모양으로, 이름만 y에 맞게 바꾼 줄이 필요합니다. 위·아래 끝은 0과 화면 높이입니다.</p>
+              </details>
+            </article>
+
+            <article class="mission" data-level="applied">
+              <p class="mission-level">응용 미션</p>
+              <h3>화살표 키로 조종하기</h3>
+              <p>
+                출발 코드에는 눌린 키를 기억하는 <code>keys</code> 객체가 이미 있습니다. <code>TODO 3</code>에서 눌린 키에 따라 vx, vy를
+                정해 화살표 키로 공을 조종하세요.
+              </p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>키를 누르는 동안만 움직이고, 떼면 멈춘다.</li>
+                  <li>두 키를 함께 누르면 대각선으로 움직인다.</li>
+                  <li>↑를 누르면 위로 간다(부호를 확인했다).</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — 순서대로 생각하기</summary>
+                <p>먼저 vx, vy를 0으로 둔 다음, 눌린 키마다 속력만큼 더하거나 빼 보세요.</p>
+              </details>
+            </article>
+
+            <article class="mission" data-level="challenge">
+              <p class="mission-level">도전 미션</p>
+              <h3>속도 화살표와 대각선 보정</h3>
+              <p>
+                공의 중심에서 속도 방향으로 화살표(선)를 그리고, 화면에 속력을 표시하세요. 그다음 대각선으로 움직일 때 속력이 한 방향으로
+                움직일 때와 같아지도록 보정하세요.
+              </p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>화살표가 공이 움직이는 방향을 가리키고, 빠를수록 길다.</li>
+                  <li>→만 누를 때와 →+↓를 누를 때 화면의 속력 표시가 같다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — 화살표 끝은 어디인가요?</summary>
+                <p>화살표 끝 좌표는 공의 위치에 속도에 비례하는 값을 더한 곳입니다. 너무 길면 작은 수를 곱해 줄이세요.</p>
+              </details>
+              <details>
+                <summary>힌트 — 길이를 1로 맞추기</summary>
+                <p>방향 화살표를 그 길이로 나누면 길이가 1이 됩니다. 길이가 0일 때는 나누지 않도록 조심하세요.</p>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <!-- 8. AI 협업 미션 -->
+        <section id="ai" aria-labelledby="ai-title">
+          <h2 id="ai-title" data-short="AI 협업">AI 협업 미션</h2>
+          <p>
+            1~8주의 AI 협업 목표는 <strong>코드 설명 듣기와 오류 원인 찾기</strong>입니다. AI의 설명은 반드시 직접 값을 바꿔 실행해서
+            확인합니다. 개인정보는 프롬프트에 넣지 않습니다.
+          </p>
+
+          <div class="prompt">
+            <strong>프롬프트 예시 1 — 설명 요청</strong>
+            <p class="prompt-text" id="prompt-1">Canvas 게임에서 공의 속도를 vx, vy 두 값으로 나눠서 쓰고 있어. Math.hypot(vx, vy)가 무엇을 계산하는지, 왜 대각선으로 움직이면 더 빨라지는지 중학생이 이해할 수 있게 그림을 상상할 수 있도록 설명해 줘. 코드는 쓰지 말고 설명만 해 줘.</p>
+            <button type="button" class="btn btn-ghost btn-small" data-copy-target="prompt-1">프롬프트 복사</button>
+          </div>
+
+          <div class="prompt">
+            <strong>프롬프트 예시 2 — 오류 원인 찾기</strong>
+            <p class="prompt-text" id="prompt-2">화살표 키로 공을 움직이는 코드를 만들었는데 ↑ 키를 누르면 공이 아래로 내려가.
+예상: ↑를 누르면 위로 간다.
+실제: (내가 본 현상을 적기)
+원인 후보를 알려 주고, 어떤 변수를 console.log로 확인하면 되는지 알려 줘. 코드를 직접 고쳐 주지는 마.
+
+(여기에 내 코드를 붙여 넣기)</p>
+            <button type="button" class="btn btn-ghost btn-small" data-copy-target="prompt-2">프롬프트 복사</button>
+          </div>
+
+          <div class="callout is-warning">
+            <p class="callout-title">AI 답변 검증 질문</p>
+            <ol>
+              <li>AI가 말한 원인이 Canvas의 y축 방향(아래가 +)과 관련이 있었나요? 수학 그래프 기준으로 설명하지는 않았나요?</li>
+              <li>AI의 설명대로 실험실에서 값을 바꿨을 때 측정값의 속력이 설명과 같았나요?</li>
+              <li>AI 설명 중 내가 받아들이지 않은 부분과 그 이유를 적을 수 있나요?</li>
+            </ol>
+          </div>
+          <div class="field">
+            <label for="ai-check">AI 확인 기록
+              <span class="hint">예측, 실제 결과, 채택하거나 고친 설명을 적습니다.</span>
+            </label>
+            <textarea id="ai-check" data-record-field="aiCheck" rows="3" maxlength="4000"></textarea>
+          </div>
+        </section>
+
+        <!-- 9. 실험 결과 및 학습 기록 -->
+        <section id="record" aria-labelledby="record-title">
+          <h2 id="record-title" data-short="학습 기록">실험 결과 및 학습 기록</h2>
+          <p class="muted">입력하면 자동으로 이 브라우저에 저장됩니다. 이름·연락처는 적지 마세요.</p>
+
+          <div class="field">
+            <span class="section-label">조작한 값</span>
+            <div data-changed-values></div>
+            <div class="button-row" style="margin-top: 8px">
+              <button type="button" class="btn btn-ghost btn-small" data-action="capture-values">현재 실험 값 기록하기</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="record-prediction">예상 결과</label>
+            <textarea id="record-prediction" data-record-field="prediction" rows="2" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-observation">관찰 결과
+              <span class="hint">예: 보정을 끄고 대각선으로 움직였을 때 속력은 ○○ px/s, 켰을 때는 ○○ px/s였다.</span>
+            </label>
+            <textarea id="record-observation" data-record-field="observation" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-debug">오류와 수정 사항</label>
+            <textarea id="record-debug" data-record-field="debugNotes" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-reflection">배운 점</label>
+            <textarea id="record-reflection" data-record-field="reflection" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn" data-action="save-record">지금 저장</button>
+            <button type="button" class="btn btn-ghost" data-action="export-record">기록 내보내기 (.json)</button>
+            <span class="record-status" data-record-status aria-live="polite"></span>
+          </div>
+        </section>
+
+        <!-- 10. 수업 마무리 -->
+        <section id="wrapup" aria-labelledby="wrapup-title">
+          <h2 id="wrapup-title" data-short="마무리">수업 마무리</h2>
+          <h3>이해 확인 질문</h3>
+          <ol>
+            <li><code>vx = -80</code>, <code>vy = 0</code>인 공은 어느 쪽으로 움직이고, 1초 동안 몇 px 움직이나요?</li>
+            <li>속도가 <code>(120, 160)</code>인 공의 속력은 얼마이고, 화살표의 무엇과 같나요?</li>
+            <li>대각선 보정을 하지 않으면 왜 대각선 이동이 더 빠른지 “화살표 길이”라는 말을 넣어 설명해 보세요.</li>
+          </ol>
+
+          <div class="summary-box">
+            <h3>핵심 요약</h3>
+            <ul>
+              <li>위치 (x, y)와 속도 (vx, vy)는 가로·세로로 나누어 따로 계산합니다.</li>
+              <li>Canvas에서 vy가 음수이면 위로, 양수이면 아래로 움직입니다.</li>
+              <li>속도 벡터의 길이가 속력이고, <code>Math.hypot(vx, vy)</code>로 구합니다.</li>
+            </ul>
+          </div>
+
+          <p>
+            <strong>다음 주 예고 — 3주차 “자유낙하 시뮬레이터”:</strong> 지금까지 공의 속도는 변하지 않았습니다. 다음 주에는
+            중력 때문에 <strong>속도가 시간에 따라 점점 커지는</strong> 운동을 만들고, 가속도가 무엇인지 알아봅니다.
+          </p>
+
+          <div class="complete-row">
+            <button type="button" class="btn" data-action="toggle-complete" aria-pressed="false">이번 주 학습 완료로 표시</button>
+            <span class="muted">목표를 확인하고 기록을 저장한 뒤 직접 눌러 주세요.</span>
+          </div>
+          <nav class="week-nav" aria-label="주차 이동" data-week-nav style="margin-top: 16px"></nav>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      import { initLesson } from '../js/common.js';
+      import { createLab } from '../simulations/week02.js';
+
+      const lab = createLab(document.querySelector('[data-lab]'));
+      initLesson({ week: 2, lab });
+    </script>
+  </body>
+</html>

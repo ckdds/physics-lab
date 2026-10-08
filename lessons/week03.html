@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3주차 · 자유낙하 시뮬레이터 — Physics Lab</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%232a62c9'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <p class="module-notice" role="alert">
+      이 교안은 로컬 서버에서 열어야 실험실이 동작합니다. README의 “실행 방법”을 확인하세요.
+    </p>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html">Physics <span>Lab</span></a>
+        <div class="topbar-meta">
+          <span>3주차 · 자유낙하 시뮬레이터</span>
+          <span class="badge" data-complete-label data-state="progress">진행 중</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="lesson-layout">
+      <nav class="toc" aria-label="교안 목차">
+        <div class="toc-title">이번 수업 순서</div>
+        <div data-toc></div>
+      </nav>
+
+      <main class="lesson-main">
+        <!-- 1. 수업 헤더 -->
+        <header class="lesson-header">
+          <p class="eyebrow" data-part-label>Part 1. 물리 시뮬레이션 기초</p>
+          <h1>3주차 · 자유낙하 시뮬레이터</h1>
+          <div class="lesson-meta">
+            <span>예상 시간 <strong>120분</strong></span>
+            <span>핵심 개념: 중력, 가속도, 시간 변화</span>
+            <span>결과물: 자유낙하 시뮬레이터</span>
+          </div>
+          <ol class="timeline" aria-label="120분 수업 배분">
+            <li style="flex: 15"><strong>15분</strong>관찰·예측</li>
+            <li style="flex: 25"><strong>25분</strong>원리·코드</li>
+            <li style="flex: 50"><strong>50분</strong>실험·AI 협업·직접 구현</li>
+            <li style="flex: 20"><strong>20분</strong>자유 실험</li>
+            <li style="flex: 10"><strong>10분</strong>정리</li>
+          </ol>
+          <nav class="week-nav" aria-label="주차 이동" data-week-nav></nav>
+          <p class="message" data-kind="warn" data-storage-warning hidden>
+            이 브라우저에서는 기록을 저장할 수 없어 새로고침하면 사라집니다. 마무리 전에 “기록 내보내기”를 사용하세요.
+          </p>
+        </header>
+
+        <!-- 2. 오늘의 학습 목표 -->
+        <section id="goals" aria-labelledby="goals-title">
+          <h2 id="goals-title" data-short="학습 목표">오늘의 학습 목표</h2>
+          <ul class="goal-list">
+            <li><strong>가속도</strong>가 “1초마다 속도가 얼마나 변하는가”라는 것을 설명할 수 있다.</li>
+            <li>중력을 받는 공은 속도가 일정하게 커지고, 같은 시간 동안 이동 거리가 점점 늘어난다는 것을 관찰로 설명할 수 있다.</li>
+            <li><code>vy += gravity * dt</code>와 <code>y += vy * dt</code> 두 줄로 자유낙하를 구현할 수 있다.</li>
+            <li>공의 반지름을 포함해 바닥에 닿는 조건을 계산할 수 있다.</li>
+          </ul>
+        </section>
+
+        <!-- 3. 관찰과 예측 -->
+        <section id="observe" aria-labelledby="observe-title">
+          <h2 id="observe-title" data-short="관찰과 예측">관찰과 예측</h2>
+          <p>
+            손에 든 공을 놓으면 처음에는 천천히, 점점 빠르게 떨어집니다. 지난주까지의 공은 속도가 변하지 않았지만, 떨어지는 공은
+            <strong>속도 자체가 계속 변합니다.</strong> 실험실의 공은 0.1초마다 노란 발자국을 남깁니다.
+          </p>
+          <div class="callout is-predict">
+            <p class="callout-title">예측 질문</p>
+            <ol>
+              <li>0.1초마다 남긴 발자국 사이의 간격은 어떻게 변할까요? 일정할까요, 넓어질까요, 좁아질까요?</li>
+              <li>중력을 <strong>2배</strong>로 키우면 바닥에 닿는 시간도 정확히 절반이 될까요?</li>
+            </ol>
+          </div>
+          <div class="field">
+            <label for="prediction">나의 예측
+              <span class="hint">이유를 함께 적어 보세요. 이 내용은 학습 기록에 함께 저장됩니다.</span>
+            </label>
+            <textarea id="prediction" data-record-field="prediction" rows="3" maxlength="4000"></textarea>
+          </div>
+        </section>
+
+        <!-- 4. 핵심 물리 개념 -->
+        <section id="concept" aria-labelledby="concept-title">
+          <h2 id="concept-title" data-short="핵심 개념">핵심 물리 개념</h2>
+
+          <div class="concept-grid">
+            <div class="concept-card">
+              <h3>① 가속도 = 속도의 변화</h3>
+              <p>속도가 위치를 바꾸듯, <strong>가속도는 속도를 바꿉니다.</strong> 중력 가속도가 800 px/s²이면 1초마다 속도가 800 px/s씩 커집니다.</p>
+              <table class="unit-table">
+                <caption class="visually-hidden">중력 가속도 800 px/s²일 때 시간에 따른 속도</caption>
+                <thead>
+                  <tr><th>시간</th><th>0 s</th><th>0.5 s</th><th>1 s</th><th>1.5 s</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>속도 vy</td><td>0</td><td>400</td><td>800</td><td>1200</td></tr>
+                </tbody>
+              </table>
+              <p class="muted">단위 px/s²는 “(px/s)/s”, 즉 1초마다 속도(px/s)가 얼마나 변하는지를 뜻합니다.</p>
+            </div>
+
+            <div class="concept-card">
+              <h3>② 높이와 Canvas의 y</h3>
+              <svg class="diagram" viewBox="0 0 260 170" role="img" aria-label="높이 h는 위로 커지지만 Canvas의 y는 아래로 커진다">
+                <rect x="0" y="0" width="260" height="170" rx="8" fill="#0f1b33" />
+                <rect x="0" y="140" width="260" height="30" fill="#2b3b5f" />
+                <line x1="0" y1="140" x2="260" y2="140" stroke="#9fb4e0" stroke-width="2" />
+                <circle cx="110" cy="50" r="12" fill="#4fb3ff" stroke="#fff" stroke-width="2" />
+                <line x1="150" y1="128" x2="150" y2="44" stroke="#7dffb0" stroke-width="2" />
+                <polygon points="150,36 144,48 156,48" fill="#7dffb0" />
+                <text x="158" y="92" fill="#7dffb0" font-size="13" font-weight="700">높이 h ↑</text>
+                <line x1="40" y1="10" x2="40" y2="122" stroke="#ff7b7b" stroke-width="2" />
+                <polygon points="40,130 34,118 46,118" fill="#ff7b7b" />
+                <text x="8" y="80" fill="#ff7b7b" font-size="13" font-weight="700">y ↓</text>
+                <text x="12" y="160" fill="#e8eefc" font-size="12">바닥 (y = 420)</text>
+              </svg>
+              <p>
+                Canvas에서 아래 방향이 +y이므로 중력은 <strong>양수</strong>입니다. 실험실은 이해하기 쉽도록 바닥에서 공 아래쪽까지의
+                거리를 “높이 h”로 함께 보여 줍니다.
+              </p>
+            </div>
+
+            <div class="concept-card">
+              <h3>③ 두 줄의 순서</h3>
+              <p class="formula">vy += gravity * dt<br />y &nbsp;+= vy * dt</p>
+              <p>
+                먼저 중력으로 <strong>속도</strong>를 바꾸고, 바뀐 속도로 <strong>위치</strong>를 바꿉니다. 실제 운동은 매 순간 이어지지만
+                컴퓨터는 dt마다 끊어서 계산하므로 이것은 <strong>근사 계산</strong>입니다. dt가 작을수록 실제에 가까워지며, 8주차에 직접 비교합니다.
+              </p>
+            </div>
+          </div>
+
+          <h3>왜 발자국 간격이 달라질까?</h3>
+          <p>
+            같은 0.1초라도 속도가 클 때는 더 멀리 갑니다. 중력이 속도를 계속 키우므로, 시간이 지날수록 0.1초 동안 이동하는 거리가 늘어납니다.
+            오른쪽 속도-시간 그래프가 <strong>곧은 오르막 직선</strong>이라면 속도가 일정하게 커지고 있다는 뜻입니다.
+          </p>
+
+          <div class="callout is-assume">
+            <p class="callout-title">이 실험의 가정과 단순화</p>
+            <ul>
+              <li><strong>공기 저항은 무시</strong>합니다. 공기 저항이 없다면 무거운 공과 가벼운 공은 같은 빠르기로 떨어집니다. 그래서 이 실험에는 질량이 없습니다.</li>
+              <li>중력 가속도의 단위는 화면 단위 px/s²입니다. 실제 지구의 중력(약 9.8 m/s²)과 숫자를 직접 비교할 수 없습니다.</li>
+              <li>바닥에 닿으면 그 자리에서 멈춥니다. 튀어 오르는 것은 4주차에 다룹니다. 착지 시간은 프레임 단위로 측정하므로 약간의 오차가 있습니다.</li>
+            </ul>
+          </div>
+          <p class="muted">교과 연결: 과학 교과서의 “중력” 관련 내용과 함께 보면 좋습니다. 아직 배우지 않았다면 이 실험이 첫 만남이 됩니다.</p>
+        </section>
+
+        <!-- 5. 인터랙티브 실험실 -->
+        <section id="lab" aria-labelledby="lab-title">
+          <h2 id="lab-title" data-short="실험실">인터랙티브 실험실</h2>
+          <p>
+            중력은 실행 중에도 바로 바뀝니다. <strong>시작 높이</strong>와 <strong>처음 세로 속도</strong>는 “시작 조건”이라서
+            시작 전이면 바로, 실행 뒤에는 <strong>재시작</strong>할 때 적용됩니다. 처음 속도를 음수로 하면 공을 위로 던집니다.
+          </p>
+
+          <div class="lab" data-lab>
+            <div class="lab-stage">
+              <canvas aria-label="공이 바닥으로 떨어지고 오른쪽에 속도-시간 그래프가 그려지는 실험 화면. 오른쪽 패널에 같은 정보가 숫자로 표시됩니다."></canvas>
+              <div class="lab-toolbar">
+                <button type="button" class="btn" data-action="start">▶ 시작</button>
+                <button type="button" class="btn btn-ghost" data-action="pause">⏸ 일시정지</button>
+                <button type="button" class="btn btn-ghost" data-action="resume">⏵ 재개</button>
+                <button type="button" class="btn btn-ghost" data-action="restart" title="지금 설정으로 처음부터 다시 실행">↻ 재시작</button>
+                <button type="button" class="btn btn-ghost" data-action="reset" title="모든 값을 기본값으로 되돌림">⟲ 초기화</button>
+                <span class="sim-status" data-sim-status aria-live="polite">시작 전</span>
+              </div>
+            </div>
+
+            <div class="lab-panel">
+              <div class="panel-box">
+                <h3>조절하기</h3>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="gravity">중력 가속도</label>
+                    <output for="gravity">800 px/s²</output>
+                  </div>
+                  <input type="range" id="gravity" min="0" max="1600" step="50" value="800" />
+                  <p class="hint">실행 중에도 바로 반영됩니다.</p>
+                </div>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="start-height">시작 높이</label>
+                    <output for="start-height">300 px</output>
+                  </div>
+                  <input type="range" id="start-height" min="0" max="380" step="10" value="300" />
+                  <p class="hint">시작 조건 — 재시작할 때 적용</p>
+                </div>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="start-vy">처음 세로 속도</label>
+                    <output for="start-vy">0 px/s</output>
+                  </div>
+                  <input type="range" id="start-vy" min="-800" max="800" step="20" value="0" />
+                  <p class="hint">시작 조건 — 음수 = 위로 던지기</p>
+                </div>
+                <label class="check"><input type="checkbox" id="show-marks" checked />0.1초 발자국 보이기</label>
+              </div>
+
+              <div class="panel-box">
+                <h3>측정값</h3>
+                <dl class="readouts">
+                  <dt>경과 시간</dt><dd data-out="time">0.00 s</dd>
+                  <dt>높이 h</dt><dd data-out="height">—</dd>
+                  <dt>세로 속도 vy</dt><dd data-out="vy">—</dd>
+                  <dt>착지 시간</dt><dd data-out="landing-time">—</dd>
+                  <dt>착지 직전 속도</dt><dd data-out="landing-speed">—</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. 핵심 코드 분석 -->
+        <section id="code" aria-labelledby="code-title">
+          <h2 id="code-title" data-short="코드 분석">핵심 코드 분석</h2>
+          <p>아래 코드는 위 실험실에서 <strong>실제로 실행되는 코드</strong>를 파일에서 그대로 불러온 것입니다.</p>
+
+          <div class="code-block">
+            <div class="code-head">
+              <span data-file-label>simulations/week03.js</span>
+              <button type="button" class="btn btn-ghost btn-small" data-copy-target="code-update">복사</button>
+            </div>
+            <pre id="code-update" data-src="../simulations/week03.js" data-region="update"><code>코드를 불러오는 중…</code></pre>
+          </div>
+          <div class="code-notes">
+            <div>
+              <h4>중요한 줄</h4>
+              <ul>
+                <li><code>ball.vy += gravity * dt</code>: 1주차의 “위치 += 속도 × dt”와 같은 모양입니다. 이번에는 <strong>속도</strong>가 바뀝니다.</li>
+                <li><code>ball.y + RADIUS &gt;= GROUND_Y</code>: 공의 중심이 아니라 <strong>아래쪽 끝</strong>이 바닥에 닿았는지 검사합니다.</li>
+                <li>닿으면 <code>ball.y = GROUND_Y - RADIUS</code>로 위치를 바닥 위에 맞춥니다. 그렇지 않으면 공이 바닥에 조금 묻혀 보입니다.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>값을 바꾸면?</h4>
+              <ul>
+                <li>gravity = 0 → 처음 속도로 계속 같은 빠르기로 움직입니다(2주차와 같은 등속 운동).</li>
+                <li>처음 속도를 음수로 → 위로 올라가며 느려지고, 가장 높은 곳에서 속도가 0이 된 뒤 떨어집니다.</li>
+                <li>gravity를 음수로 → 공이 위로 “떨어집니다”. 중력의 부호가 방향이라는 것을 확인해 보세요.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. 직접 구현 미션 -->
+        <section id="mission" aria-labelledby="mission-title">
+          <h2 id="mission-title" data-short="구현 미션">직접 구현 미션</h2>
+          <p>
+            출발 코드 <code>starter/week03/</code>의 <code>main.js</code>를 수정합니다. 수정한 뒤
+            <a href="../starter/week03/index.html" target="_blank" rel="noopener">출발 코드 실행 화면 열기 ↗</a>에서 새로고침해
+            확인하세요. 지금 출발 코드의 공은 공중에 떠 있습니다. 화면을 클릭하면 공을 다시 위에서 시작합니다.
+          </p>
+
+          <div class="missions">
+            <article class="mission" data-level="basic">
+              <p class="mission-level">기초 미션</p>
+              <h3>중력으로 떨어뜨리고 바닥에 세우기</h3>
+              <p><code>TODO 1</code>에서 중력이 속도를 바꾸게 하고, <code>TODO 2</code>에서 공이 바닥에 닿으면 멈추게 하세요.</p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>공이 처음에는 천천히, 점점 빠르게 떨어진다.</li>
+                  <li>공이 바닥에 묻히거나 바닥을 뚫지 않고, 바닥 선 위에 정확히 멈춘다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 1 — 무엇이 무엇을 바꾸나요?</summary>
+                <p>속도가 위치를 바꾸는 줄은 이미 있습니다. 같은 모양으로 “가속도가 속도를 바꾸는” 줄을 그 위에 쓰세요.</p>
+              </details>
+              <details>
+                <summary>힌트 2 — 바닥에 “닿았다”는 조건</summary>
+                <p>공의 y는 중심입니다. 공의 아래쪽 끝의 y가 바닥 y 이상이 되면 닿은 것입니다. 닿았을 때 위치와 속도를 모두 정리하세요.</p>
+              </details>
+            </article>
+
+            <article class="mission" data-level="applied">
+              <p class="mission-level">응용 미션</p>
+              <h3>착지 시간 재고 비교하기</h3>
+              <p>
+                공이 바닥에 닿는 순간의 경과 시간을 화면에 표시하세요. 그다음 중력을 400, 800, 1600 px/s²로 바꿔 가며 착지 시간을 표로 기록합니다.
+              </p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>착지 시간이 화면에 소수 둘째 자리까지 표시된다.</li>
+                  <li>세 가지 중력의 착지 시간을 학습 기록에 적고, “중력 2배 → 시간 절반”이 맞는지 판단했다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — 시간은 어떻게 재나요?</summary>
+                <p>매 프레임 dt를 더해 가는 변수를 하나 만들고, 바닥에 닿은 순간 그 값을 다른 변수에 저장해 두세요.</p>
+              </details>
+            </article>
+
+            <article class="mission" data-level="challenge">
+              <p class="mission-level">도전 미션</p>
+              <h3>위로 던져서 최고점 찾기</h3>
+              <p>
+                처음 속도를 위쪽(−500 px/s)으로 주고, 공이 가장 높이 올라간 순간의 높이와 시간을 화면에 표시하세요.
+              </p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>공이 올라가며 느려지다가 다시 떨어진다.</li>
+                  <li>최고점의 높이와 시간이 한 번만 기록된다.</li>
+                  <li>최고점에서 속도가 어떤 값에 가까운지 학습 기록에 설명했다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — “가장 높은 순간”을 어떻게 알 수 있나요?</summary>
+                <p>올라갈 때와 내려갈 때 vy의 부호가 다릅니다. 부호가 바뀌는 프레임을 찾아보세요.</p>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <!-- 8. AI 협업 미션 -->
+        <section id="ai" aria-labelledby="ai-title">
+          <h2 id="ai-title" data-short="AI 협업">AI 협업 미션</h2>
+          <p>
+            1~8주의 AI 협업 목표는 <strong>코드 설명 듣기와 오류 원인 찾기</strong>입니다. AI의 설명은 출발 코드에서 직접 바꿔 실행해 확인합니다.
+          </p>
+
+          <div class="prompt">
+            <strong>프롬프트 예시 1 — 설명 요청</strong>
+            <p class="prompt-text" id="prompt-1">자유낙하 코드에서 vy += gravity * dt; 다음에 y += vy * dt; 를 쓰고 있어. 이 두 줄의 순서를 바꾸면 결과가 어떻게 달라지는지, 왜 그런지 중학생이 이해할 수 있게 설명해 줘. 내가 직접 바꿔서 확인해 볼 수 있는 실험 방법도 알려 줘. 코드는 고쳐 주지 마.</p>
+            <button type="button" class="btn btn-ghost btn-small" data-copy-target="prompt-1">프롬프트 복사</button>
+          </div>
+
+          <div class="prompt">
+            <strong>프롬프트 예시 2 — 오류 원인 찾기</strong>
+            <p class="prompt-text" id="prompt-2">떨어지는 공이 바닥에 닿았을 때 바닥 아래로 반쯤 묻혀서 멈춰.
+예상: 공의 아래쪽 끝이 바닥 선에 딱 맞게 멈춘다.
+실제: (내가 본 현상을 적기)
+원인 후보와 각각 확인하는 방법을 알려 줘. 코드를 직접 고쳐 주지는 마.
+
+(여기에 바닥 검사 부분 코드를 붙여 넣기)</p>
+            <button type="button" class="btn btn-ghost btn-small" data-copy-target="prompt-2">프롬프트 복사</button>
+          </div>
+
+          <div class="callout is-warning">
+            <p class="callout-title">AI 답변 검증 질문</p>
+            <ol>
+              <li>순서를 바꿔 실행했을 때 착지 시간이나 착지 속도가 AI의 설명대로 달라졌나요? 숫자로 비교해 보세요.</li>
+              <li>AI가 공의 반지름이나 Canvas y축 방향을 고려했나요?</li>
+              <li>AI의 설명 중 실험 결과와 맞지 않은 부분이 있었다면 무엇인가요?</li>
+            </ol>
+          </div>
+          <div class="field">
+            <label for="ai-check">AI 확인 기록
+              <span class="hint">예측, 실제 결과, 채택하거나 고친 설명을 적습니다.</span>
+            </label>
+            <textarea id="ai-check" data-record-field="aiCheck" rows="3" maxlength="4000"></textarea>
+          </div>
+        </section>
+
+        <!-- 9. 실험 결과 및 학습 기록 -->
+        <section id="record" aria-labelledby="record-title">
+          <h2 id="record-title" data-short="학습 기록">실험 결과 및 학습 기록</h2>
+          <p class="muted">입력하면 자동으로 이 브라우저에 저장됩니다. 이름·연락처는 적지 마세요.</p>
+
+          <div class="field">
+            <span class="section-label">조작한 값</span>
+            <div data-changed-values></div>
+            <div class="button-row" style="margin-top: 8px">
+              <button type="button" class="btn btn-ghost btn-small" data-action="capture-values">현재 실험 값 기록하기</button>
+            </div>
+            <p class="hint muted">착지한 뒤에 누르면 착지 시간과 착지 속도도 함께 기록됩니다.</p>
+          </div>
+          <div class="field">
+            <label for="record-prediction">예상 결과</label>
+            <textarea id="record-prediction" data-record-field="prediction" rows="2" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-observation">관찰 결과
+              <span class="hint">예: 중력 400 → ○.○○ s, 800 → ○.○○ s, 1600 → ○.○○ s</span>
+            </label>
+            <textarea id="record-observation" data-record-field="observation" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-debug">오류와 수정 사항</label>
+            <textarea id="record-debug" data-record-field="debugNotes" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-reflection">배운 점</label>
+            <textarea id="record-reflection" data-record-field="reflection" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn" data-action="save-record">지금 저장</button>
+            <button type="button" class="btn btn-ghost" data-action="export-record">기록 내보내기 (.json)</button>
+            <span class="record-status" data-record-status aria-live="polite"></span>
+          </div>
+        </section>
+
+        <!-- 10. 수업 마무리 -->
+        <section id="wrapup" aria-labelledby="wrapup-title">
+          <h2 id="wrapup-title" data-short="마무리">수업 마무리</h2>
+          <h3>이해 확인 질문</h3>
+          <ol>
+            <li>중력 가속도가 800 px/s²이고 처음 속도가 0이면, 0.5초 뒤와 1초 뒤의 속도는 각각 얼마인가요?</li>
+            <li>같은 0.1초인데 발자국 사이 간격이 점점 넓어지는 이유를 “속도”라는 말을 넣어 설명해 보세요.</li>
+            <li>중력을 4배로 키웠을 때 착지 시간은 어떻게 되었나요? 실험 결과로 답해 보세요.</li>
+          </ol>
+
+          <div class="summary-box">
+            <h3>핵심 요약</h3>
+            <ul>
+              <li>가속도는 속도를 바꾸고, 속도는 위치를 바꿉니다.</li>
+              <li>중력은 아래 방향(Canvas의 +y) 가속도라서 떨어지는 공의 속도가 일정하게 커집니다.</li>
+              <li>바닥 검사는 공의 중심이 아니라 가장자리(중심 + 반지름)로 해야 합니다.</li>
+            </ul>
+          </div>
+
+          <p>
+            <strong>다음 주 예고 — 4주차 “튀어 오르는 공”:</strong> 이번 주의 공은 바닥에서 멈췄습니다. 다음 주에는 바닥과 벽에서
+            튀어 오르게 하고, 튈 때마다 높이가 어떻게 줄어드는지 관찰합니다. Part 1을 마무리하는 짧은 발표도 합니다.
+          </p>
+
+          <div class="complete-row">
+            <button type="button" class="btn" data-action="toggle-complete" aria-pressed="false">이번 주 학습 완료로 표시</button>
+            <span class="muted">목표를 확인하고 기록을 저장한 뒤 직접 눌러 주세요.</span>
+          </div>
+          <nav class="week-nav" aria-label="주차 이동" data-week-nav style="margin-top: 16px"></nav>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      import { initLesson } from '../js/common.js';
+      import { createLab } from '../simulations/week03.js';
+
+      const lab = createLab(document.querySelector('[data-lab]'));
+      initLesson({ week: 3, lab });
+    </script>
+  </body>
+</html>

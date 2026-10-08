@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>1주차 · 움직이는 공 — Physics Lab</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%232a62c9'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <p class="module-notice" role="alert">
+      이 교안은 로컬 서버에서 열어야 실험실이 동작합니다. README의 “실행 방법”을 확인하세요.
+    </p>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html">Physics <span>Lab</span></a>
+        <div class="topbar-meta">
+          <span>1주차 · 움직이는 공</span>
+          <span class="badge" data-complete-label data-state="progress">진행 중</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="lesson-layout">
+      <nav class="toc" aria-label="교안 목차">
+        <div class="toc-title">이번 수업 순서</div>
+        <div data-toc></div>
+      </nav>
+
+      <main class="lesson-main">
+        <!-- 1. 수업 헤더 -->
+        <header class="lesson-header">
+          <p class="eyebrow" data-part-label>Part 1. 물리 시뮬레이션 기초</p>
+          <h1>1주차 · 움직이는 공</h1>
+          <div class="lesson-meta">
+            <span>예상 시간 <strong>120분</strong></span>
+            <span>핵심 개념: Canvas, 좌표계, 게임 루프, deltaTime</span>
+            <span>결과물: 움직이는 공</span>
+          </div>
+          <ol class="timeline" aria-label="120분 수업 배분">
+            <li style="flex: 15"><strong>15분</strong>관찰·예측</li>
+            <li style="flex: 25"><strong>25분</strong>원리·코드</li>
+            <li style="flex: 50"><strong>50분</strong>실험·AI 협업·직접 구현</li>
+            <li style="flex: 20"><strong>20분</strong>자유 실험</li>
+            <li style="flex: 10"><strong>10분</strong>정리</li>
+          </ol>
+          <nav class="week-nav" aria-label="주차 이동" data-week-nav></nav>
+          <p class="message" data-kind="warn" data-storage-warning hidden>
+            이 브라우저에서는 기록을 저장할 수 없어 새로고침하면 사라집니다. 마무리 전에 “기록 내보내기”를 사용하세요.
+          </p>
+        </header>
+
+        <!-- 2. 오늘의 학습 목표 -->
+        <section id="goals" aria-labelledby="goals-title">
+          <h2 id="goals-title" data-short="학습 목표">오늘의 학습 목표</h2>
+          <ul class="goal-list">
+            <li>Canvas 좌표계에서 (0, 0)의 위치와 x·y 값이 커지는 방향을 말할 수 있다.</li>
+            <li>게임 루프가 <strong>계산 → 그리기 → 다음 프레임 요청</strong>을 반복한다는 것을 설명할 수 있다.</li>
+            <li>deltaTime(dt)을 <strong>초 단위</strong>로 구해 <code>x += speed * dt</code>로 공을 움직일 수 있다.</li>
+            <li>프레임 방식과 deltaTime 방식의 차이를 실험 결과로 설명할 수 있다.</li>
+          </ul>
+        </section>
+
+        <!-- 3. 관찰과 예측 -->
+        <section id="observe" aria-labelledby="observe-title">
+          <h2 id="observe-title" data-short="관찰과 예측">관찰과 예측</h2>
+          <p>
+            게임 속 캐릭터는 컴퓨터마다 같은 빠르기로 움직여야 합니다. 그런데 어떤 컴퓨터는 1초에 화면을 60번, 어떤
+            컴퓨터는 144번, 느린 컴퓨터는 30번만 다시 그립니다. 그래도 공이 똑같은 빠르기로 움직이게 하려면 어떻게 해야 할까요?
+          </p>
+          <p>
+            아래 실험실에는 공 두 개가 있습니다. <span class="swatch" style="background: #4fb3ff"></span><strong>파란 공</strong>은
+            “흐른 시간만큼” 움직이고, <span class="swatch" style="background: #ffad4d"></span><strong>주황 공</strong>은 “화면을
+            한 번 그릴 때마다 같은 거리만큼” 움직입니다. 실험실을 실행하기 전에 먼저 예측해 보세요.
+          </p>
+          <div class="callout is-predict">
+            <p class="callout-title">예측 질문</p>
+            <ol>
+              <li>가상 프레임률을 <strong>30회/s</strong>로 낮추면 두 공 중 어느 공이 뒤처질까요? 그 이유는 무엇일까요?</li>
+              <li>속도가 <strong>120 px/s</strong>일 때 5초가 지나면 파란 공은 몇 px 이동했을까요?</li>
+            </ol>
+          </div>
+          <div class="field">
+            <label for="prediction">나의 예측
+              <span class="hint">정답을 맞히는 것보다 이유를 적는 것이 중요합니다. 이 내용은 학습 기록에 함께 저장됩니다.</span>
+            </label>
+            <textarea id="prediction" data-record-field="prediction" rows="3" maxlength="4000"></textarea>
+          </div>
+        </section>
+
+        <!-- 4. 핵심 물리 개념 -->
+        <section id="concept" aria-labelledby="concept-title">
+          <h2 id="concept-title" data-short="핵심 개념">핵심 물리 개념</h2>
+
+          <div class="concept-grid">
+            <div class="concept-card">
+              <h3>① Canvas 좌표계</h3>
+              <svg class="diagram" viewBox="0 0 260 170" role="img" aria-label="Canvas 좌표계: 왼쪽 위가 원점, x는 오른쪽, y는 아래쪽으로 커진다">
+                <rect x="20" y="20" width="220" height="130" rx="6" fill="#0f1b33" />
+                <circle cx="20" cy="20" r="5" fill="#ffe678" />
+                <text x="28" y="40" fill="#ffe678" font-size="12">(0, 0)</text>
+                <line x1="20" y1="20" x2="225" y2="20" stroke="#4fb3ff" stroke-width="3" />
+                <polygon points="232,20 222,14 222,26" fill="#4fb3ff" />
+                <text x="200" y="14" fill="#2a62c9" font-size="13" font-weight="700">+x</text>
+                <line x1="20" y1="20" x2="20" y2="138" stroke="#ff7b7b" stroke-width="3" />
+                <polygon points="20,145 14,135 26,135" fill="#ff7b7b" />
+                <text x="2" y="165" fill="#b4232f" font-size="13" font-weight="700">+y</text>
+                <circle cx="150" cy="95" r="9" fill="#4fb3ff" stroke="#fff" stroke-width="2" />
+                <text x="110" y="125" fill="#e8eefc" font-size="12">(150, 95)</text>
+              </svg>
+              <p>왼쪽 위가 <code>(0, 0)</code>입니다. x는 <strong>오른쪽</strong>으로, y는 <strong>아래쪽</strong>으로 커집니다.</p>
+              <p class="muted">수학 시간의 그래프는 y가 위로 커지므로 방향이 반대입니다.</p>
+            </div>
+
+            <div class="concept-card">
+              <h3>② 게임 루프</h3>
+              <svg class="diagram" viewBox="0 0 260 170" role="img" aria-label="게임 루프: 시간 재기, 계산, 그리기를 반복한다">
+                <defs>
+                  <marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#2a62c9" />
+                  </marker>
+                </defs>
+                <rect x="80" y="8" width="100" height="36" rx="8" fill="#e3ecfc" stroke="#2a62c9" />
+                <text x="130" y="31" text-anchor="middle" font-size="13" fill="#1b2a4a">① 시간 재기 (dt)</text>
+                <rect x="160" y="110" width="94" height="36" rx="8" fill="#e3ecfc" stroke="#2a62c9" />
+                <text x="207" y="133" text-anchor="middle" font-size="13" fill="#1b2a4a">② 계산 (update)</text>
+                <rect x="6" y="110" width="94" height="36" rx="8" fill="#e3ecfc" stroke="#2a62c9" />
+                <text x="53" y="133" text-anchor="middle" font-size="13" fill="#1b2a4a">③ 그리기 (render)</text>
+                <path d="M180 30 Q 230 50 215 105" fill="none" stroke="#2a62c9" stroke-width="2" marker-end="url(#arrow1)" />
+                <path d="M158 128 L 104 128" fill="none" stroke="#2a62c9" stroke-width="2" marker-end="url(#arrow1)" />
+                <path d="M45 106 Q 30 50 76 30" fill="none" stroke="#2a62c9" stroke-width="2" marker-end="url(#arrow1)" />
+                <text x="130" y="85" text-anchor="middle" font-size="11" fill="#55607a">requestAnimationFrame</text>
+                <text x="130" y="99" text-anchor="middle" font-size="11" fill="#55607a">이 다음 프레임을 예약</text>
+              </svg>
+              <p>
+                <code>requestAnimationFrame</code>은 “다음에 화면을 그릴 때 이 함수를 불러 줘”라는 예약입니다. 함수 안에서 다시
+                예약하면 루프가 계속 돕니다.
+              </p>
+            </div>
+
+            <div class="concept-card">
+              <h3>③ deltaTime (dt)</h3>
+              <p>
+                <strong>지난 프레임 이후 흐른 시간</strong>입니다. 브라우저는 시각을 밀리초(ms)로 알려 주므로
+                <code>1000</code>으로 나누어 초(s)로 바꿉니다.
+              </p>
+              <p class="formula">dt = (지금 시각 − 이전 시각) ÷ 1000</p>
+              <p>1초에 60번 그리면 dt ≈ 0.0167초, 30번 그리면 dt ≈ 0.0333초입니다.</p>
+            </div>
+          </div>
+
+          <h3>속도와 위치의 관계</h3>
+          <p>속도는 “1초 동안 위치가 얼마나 바뀌는가”입니다. 그러므로 dt초 동안에는 <code>속도 × dt</code>만큼 움직입니다.</p>
+          <p class="formula">새 위치 = 현재 위치 + 속도 × dt &nbsp;&nbsp;→&nbsp;&nbsp; x += speed * dt</p>
+          <p>
+            예) 속도 120 px/s, dt = 0.0167 s → 한 프레임에 약 2 px 이동 → 1초(60프레임) 동안 약 120 px 이동. 프레임이 30번뿐이면
+            dt가 두 배(0.0333 s)라서 한 번에 약 4 px씩 움직이고, 1초 뒤 위치는 같습니다.
+          </p>
+
+          <div class="table-scroll">
+            <table class="unit-table">
+              <caption class="visually-hidden">이번 주에 쓰는 양과 단위</caption>
+              <thead>
+                <tr><th>양</th><th>코드 이름</th><th>단위</th><th>뜻</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>위치</td><td><code>x</code></td><td>px</td><td>왼쪽 끝에서부터의 거리</td></tr>
+                <tr><td>속도</td><td><code>speed</code></td><td>px/s</td><td>1초 동안 움직이는 거리</td></tr>
+                <tr><td>시간 간격</td><td><code>dt</code></td><td>s (초)</td><td>지난 프레임 이후 흐른 시간</td></tr>
+                <tr><td>프레임률</td><td>—</td><td>회/s</td><td>1초 동안 화면을 다시 그린 횟수</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout is-assume">
+            <p class="callout-title">이 실험의 가정과 단순화</p>
+            <ul>
+              <li><strong>px는 화면 단위</strong>입니다. 실제 미터(m)와 같지 않습니다. 실험실의 화면은 항상 가로 800 px × 세로 450 px로 계산합니다.</li>
+              <li>dt는 최대 0.05초로 제한합니다. 탭을 바꿨다 돌아오면 그동안의 시간은 더하지 않습니다.</li>
+              <li>공은 오른쪽 끝을 벗어나면 왼쪽에서 다시 나타납니다(벽 충돌은 4주차에 배웁니다).</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- 5. 인터랙티브 실험실 -->
+        <section id="lab" aria-labelledby="lab-title">
+          <h2 id="lab-title" data-short="실험실">인터랙티브 실험실</h2>
+          <p>캔버스 위에 마우스를 올리면 그 지점의 좌표가 보입니다. 값을 바꾸며 예측이 맞는지 확인하세요.</p>
+
+          <div class="lab" data-lab>
+            <div class="lab-stage">
+              <canvas aria-label="두 공이 오른쪽으로 움직이는 실험 화면. 오른쪽 패널의 측정값에 같은 정보가 숫자로 표시됩니다."></canvas>
+              <div class="lab-toolbar">
+                <button type="button" class="btn" data-action="start">▶ 시작</button>
+                <button type="button" class="btn btn-ghost" data-action="pause">⏸ 일시정지</button>
+                <button type="button" class="btn btn-ghost" data-action="resume">⏵ 재개</button>
+                <button type="button" class="btn btn-ghost" data-action="restart" title="지금 설정으로 처음부터 다시 실행">↻ 재시작</button>
+                <button type="button" class="btn btn-ghost" data-action="reset" title="모든 값을 기본값으로 되돌림">⟲ 초기화</button>
+                <span class="sim-status" data-sim-status aria-live="polite">시작 전</span>
+              </div>
+            </div>
+
+            <div class="lab-panel">
+              <div class="panel-box">
+                <h3>조절하기</h3>
+                <div class="control">
+                  <div class="control-head">
+                    <label for="speed">속도 speed</label>
+                    <output for="speed">120 px/s</output>
+                  </div>
+                  <input type="range" id="speed" min="0" max="400" step="10" value="120" />
+                  <p class="hint">실행 중에도 바로 반영됩니다.</p>
+                </div>
+                <fieldset class="segmented">
+                  <legend>가상 프레임률 (회/s) — 느린 컴퓨터 흉내</legend>
+                  <label><input type="radio" name="fps" value="0" checked /><span>제한 없음</span></label>
+                  <label><input type="radio" name="fps" value="60" /><span>60</span></label>
+                  <label><input type="radio" name="fps" value="30" /><span>30</span></label>
+                  <label><input type="radio" name="fps" value="15" /><span>15</span></label>
+                </fieldset>
+                <label class="check"><input type="checkbox" id="show-frame-ball" checked />주황 공(프레임 방식) 보이기</label>
+                <label class="check"><input type="checkbox" id="show-grid" checked />좌표 격자 보이기</label>
+              </div>
+
+              <div class="panel-box">
+                <h3>측정값</h3>
+                <dl class="readouts" aria-live="off">
+                  <dt>경과 시간</dt><dd data-out="time">0.00 s</dd>
+                  <dt>이번 프레임 dt</dt><dd data-out="dt">—</dd>
+                  <dt>실제 프레임률</dt><dd data-out="fps">—</dd>
+                  <dt><span class="swatch" style="background: #4fb3ff"></span>파란 공 이동</dt><dd data-out="dist-dt">0 px</dd>
+                  <dt><span class="swatch" style="background: #ffad4d"></span>주황 공 이동</dt><dd data-out="dist-frame">0 px</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div class="callout">
+            <p class="callout-title">버튼의 차이</p>
+            <p>
+            <strong>일시정지/재개</strong>는 멈춘 자리에서 이어 갑니다. <strong>재시작</strong>은 지금 설정 그대로 처음부터 다시
+            실행합니다. <strong>초기화</strong>는 모든 값을 기본값으로 되돌리고 시작 전 상태로 만듭니다.
+            </p>
+          </div>
+        </section>
+
+        <!-- 6. 핵심 코드 분석 -->
+        <section id="code" aria-labelledby="code-title">
+          <h2 id="code-title" data-short="코드 분석">핵심 코드 분석</h2>
+          <p>아래 코드는 위 실험실에서 <strong>실제로 실행되는 코드</strong>를 파일에서 그대로 불러온 것입니다.</p>
+
+          <h3>① 한 프레임의 움직임 계산</h3>
+          <div class="code-block">
+            <div class="code-head">
+              <span data-file-label>simulations/week01.js</span>
+              <button type="button" class="btn btn-ghost btn-small" data-copy-target="code-update">복사</button>
+            </div>
+            <pre id="code-update" data-src="../simulations/week01.js" data-region="update"><code>코드를 불러오는 중…</code></pre>
+          </div>
+          <div class="code-notes">
+            <div>
+              <h4>중요한 줄</h4>
+              <ul>
+                <li><code>speed * dt</code>: “1초에 speed px”를 “dt초 동안의 거리”로 바꿉니다.</li>
+                <li><code>speed / 60</code>: 화면을 1초에 60번 그린다고 <em>가정</em>합니다. 가정이 틀리면 빠르기가 달라집니다.</li>
+                <li>오른쪽 끝을 벗어나는지 검사할 때 반지름 <code>RADIUS</code>를 빼서, 공이 완전히 사라진 뒤에 옮깁니다.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>값을 바꾸면?</h4>
+              <ul>
+                <li>speed를 2배로 → 같은 시간에 2배 멀리 갑니다(두 공 모두).</li>
+                <li>프레임률 30회/s → 파란 공은 그대로, 주황 공은 절반 빠르기가 됩니다.</li>
+                <li><code>* dt</code>를 지우면 → 한 프레임에 120 px씩 움직여 공이 순식간에 사라집니다. 단위가 맞지 않기 때문입니다.</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>② 게임 루프와 dt 계산</h3>
+          <div class="code-block">
+            <div class="code-head">
+              <span data-file-label>js/sim-kit.js</span>
+              <button type="button" class="btn btn-ghost btn-small" data-copy-target="code-loop">복사</button>
+            </div>
+            <pre id="code-loop" data-src="../js/sim-kit.js" data-region="game-loop"><code>코드를 불러오는 중…</code></pre>
+          </div>
+          <div class="code-notes">
+            <div>
+              <h4>중요한 줄</h4>
+              <ul>
+                <li><code>(now - loop.lastTime) / 1000</code>: ms를 초로 바꾼 dt입니다.</li>
+                <li><code>Math.min(dt, MAX_DT)</code>: 0.05초보다 긴 간격은 잘라서 공이 순간 이동하지 않게 합니다.</li>
+                <li><code>requestAnimationFrame(frame)</code>: 마지막에 다음 프레임을 다시 예약해서 루프가 이어집니다.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>생각해 보기</h4>
+              <ul>
+                <li>계산(update)을 그리기(render)보다 먼저 하는 이유는 무엇일까요?</li>
+                <li>일시정지 중에는 왜 <code>requestAnimationFrame</code>을 다시 예약하지 않을까요?</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. 직접 구현 미션 -->
+        <section id="mission" aria-labelledby="mission-title">
+          <h2 id="mission-title" data-short="구현 미션">직접 구현 미션</h2>
+          <p>
+            출발 코드 <code>starter/week01/</code>의 <code>main.js</code>를 수정합니다. 수정한 뒤
+            <a href="../starter/week01/index.html" target="_blank" rel="noopener">출발 코드 실행 화면 열기 ↗</a>에서 새로고침해
+            확인하세요. 원본은 복사해 두고 작업하면 언제든 처음으로 돌아갈 수 있습니다.
+          </p>
+
+          <div class="missions">
+            <article class="mission" data-level="basic">
+              <p class="mission-level">기초 미션</p>
+              <h3>dt를 구해서 공을 움직이기</h3>
+              <p><code>main.js</code>의 <code>TODO 1</code>, <code>TODO 2</code>를 완성해 공이 오른쪽으로 일정한 빠르기로 움직이게 합니다.</p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>공이 끊기지 않고 오른쪽으로 움직인다.</li>
+                  <li>화면 왼쪽 위의 <code>dt</code> 표시가 0.01~0.02초 근처의 값이다(모니터에 따라 다름).</li>
+                  <li>속도를 120 px/s로 두었을 때 약 5초 뒤 공의 x가 처음보다 약 600 px 커진다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 1 — 시각은 어디서 얻나요?</summary>
+                <p><code>requestAnimationFrame</code>이 부르는 함수는 첫 번째 매개변수로 현재 시각(ms)을 받습니다.</p>
+              </details>
+              <details>
+                <summary>힌트 2 — “이전 시각”은 어떻게 기억하나요?</summary>
+                <p>함수 바깥에 이전 시각을 담는 변수를 하나 두고, 매 프레임 계산이 끝나면 지금 시각으로 바꿔 둡니다.</p>
+              </details>
+            </article>
+
+            <article class="mission" data-level="applied">
+              <p class="mission-level">응용 미션</p>
+              <h3>화면을 건너는 시간 예측하고 재기</h3>
+              <p>
+                <code>TODO 3</code>을 완성해 공이 오른쪽 끝을 완전히 벗어나면 왼쪽에서 다시 나타나게 하세요. 그다음 속도를 200 px/s로
+                바꾸고, 공이 화면 폭 800 px을 건너는 시간을 <strong>먼저 계산으로 예측</strong>한 뒤 스톱워치로 재어 비교합니다.
+              </p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>공이 반쯤 걸친 채 갑자기 사라지지 않는다(반지름을 고려한다).</li>
+                  <li>예측한 시간과 잰 시간의 차이를 학습 기록에 적었다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — 공이 “완전히” 벗어난 순간은?</summary>
+                <p>공의 x는 공의 <em>중심</em>입니다. 공의 왼쪽 가장자리가 화면 오른쪽 끝(800)을 넘은 때를 생각해 보세요.</p>
+              </details>
+            </article>
+
+            <article class="mission" data-level="challenge">
+              <p class="mission-level">도전 미션</p>
+              <h3>아래로 내려가는 두 번째 공</h3>
+              <p>
+                두 번째 공을 만들어 <strong>아래쪽</strong>으로 80 px/s로 움직이고, 화면 아래를 벗어나면 위에서 다시 나타나게 하세요.
+                변수 이름은 뜻이 드러나게 정합니다.
+              </p>
+              <div class="criteria">
+                <strong>성공 조건</strong>
+                <ul>
+                  <li>두 공이 각자의 속도로 동시에 움직인다.</li>
+                  <li>두 번째 공은 y 값이 커지는 방향으로 움직인다.</li>
+                  <li>왜 “아래로” 가려면 y를 더해야 하는지 학습 기록에 설명했다.</li>
+                </ul>
+              </div>
+              <details>
+                <summary>힌트 — 무엇을 하나 더 만들어야 하나요?</summary>
+                <p>첫 번째 공을 위해 만든 변수(위치·속도)를 두 번째 공용으로 하나씩 더 만들고, 계산과 그리기를 각각 추가합니다.</p>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <!-- 8. AI 협업 미션 -->
+        <section id="ai" aria-labelledby="ai-title">
+          <h2 id="ai-title" data-short="AI 협업">AI 협업 미션</h2>
+          <p>
+            1~8주의 AI 협업 목표는 <strong>코드 설명 듣기와 오류 원인 찾기</strong>입니다. AI에게 코드를 대신 써 달라고 하지 말고,
+            설명을 듣고 <strong>직접 실행해서 확인</strong>하세요. 이름·학교 같은 개인정보는 프롬프트에 넣지 않습니다.
+          </p>
+
+          <div class="prompt">
+            <strong>프롬프트 예시 1 — 설명 요청</strong>
+            <p class="prompt-text" id="prompt-1">아래는 Canvas에서 공을 움직이는 내 게임 루프 코드야. dt가 무엇인지, 왜 1000으로 나누는지 중학생이 이해할 수 있게 설명해 줘. 고친 코드는 쓰지 말고 설명만 해 줘.
+
+(여기에 내 코드를 붙여 넣기)</p>
+            <button type="button" class="btn btn-ghost btn-small" data-copy-target="prompt-1">프롬프트 복사</button>
+          </div>
+
+          <div class="prompt">
+            <strong>프롬프트 예시 2 — 오류 원인 찾기</strong>
+            <p class="prompt-text" id="prompt-2">내 Canvas 공이 화면에 나타나자마자 오른쪽으로 사라져 버려.
+예상: 1초에 120 px씩 움직인다.
+실제: (내가 본 현상을 적기)
+원인 후보를 3가지 알려 주고, 각각을 확인하려면 어떤 값을 console.log로 찍어 보면 되는지 알려 줘. 코드를 직접 고쳐 주지는 마.
+
+(여기에 내 코드를 붙여 넣기)</p>
+            <button type="button" class="btn btn-ghost btn-small" data-copy-target="prompt-2">프롬프트 복사</button>
+          </div>
+
+          <div class="callout is-warning">
+            <p class="callout-title">AI 답변 검증 질문</p>
+            <ol>
+              <li>AI의 설명을 <strong>내 말로</strong> 한두 문장으로 바꿔 적을 수 있나요?</li>
+              <li>AI가 말한 대로 값을 바꿔 실행했을 때 결과가 설명과 같았나요? 다르다면 무엇이 달랐나요?</li>
+              <li>AI 설명 중 실험실의 실제 코드와 맞지 않는 부분이 있었나요?</li>
+            </ol>
+          </div>
+          <div class="field">
+            <label for="ai-check">AI 확인 기록
+              <span class="hint">예측, 실제 결과, 채택하거나 고친 설명을 적습니다.</span>
+            </label>
+            <textarea id="ai-check" data-record-field="aiCheck" rows="3" maxlength="4000"></textarea>
+          </div>
+        </section>
+
+        <!-- 9. 실험 결과 및 학습 기록 -->
+        <section id="record" aria-labelledby="record-title">
+          <h2 id="record-title" data-short="학습 기록">실험 결과 및 학습 기록</h2>
+          <p class="muted">입력하면 자동으로 이 브라우저에 저장됩니다. 이름·연락처는 적지 마세요.</p>
+
+          <div class="field">
+            <span class="section-label">조작한 값</span>
+            <div data-changed-values></div>
+            <div class="button-row" style="margin-top: 8px">
+              <button type="button" class="btn btn-ghost btn-small" data-action="capture-values">현재 실험 값 기록하기</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="record-prediction">예상 결과</label>
+            <textarea id="record-prediction" data-record-field="prediction" rows="2" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-observation">관찰 결과
+              <span class="hint">예: 프레임률 30에서 5초 뒤 파란 공은 ○○ px, 주황 공은 ○○ px 이동했다.</span>
+            </label>
+            <textarea id="record-observation" data-record-field="observation" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-debug">오류와 수정 사항</label>
+            <textarea id="record-debug" data-record-field="debugNotes" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="field">
+            <label for="record-reflection">배운 점</label>
+            <textarea id="record-reflection" data-record-field="reflection" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn" data-action="save-record">지금 저장</button>
+            <button type="button" class="btn btn-ghost" data-action="export-record">기록 내보내기 (.json)</button>
+            <span class="record-status" data-record-status aria-live="polite"></span>
+          </div>
+        </section>
+
+        <!-- 10. 수업 마무리 -->
+        <section id="wrapup" aria-labelledby="wrapup-title">
+          <h2 id="wrapup-title" data-short="마무리">수업 마무리</h2>
+          <h3>이해 확인 질문</h3>
+          <ol>
+            <li>Canvas에서 (0, 0)은 어디이고, 공의 y 값이 커지면 공은 어느 쪽으로 움직이나요?</li>
+            <li>가상 프레임률 30회/s에서 주황 공이 뒤처진 이유를 “dt”라는 말을 넣어 설명해 보세요.</li>
+            <li>속도 150 px/s인 공은 2초 동안 몇 px 움직이나요? 프레임률이 달라지면 이 값이 바뀌나요?</li>
+          </ol>
+
+          <div class="summary-box">
+            <h3>핵심 요약</h3>
+            <ul>
+              <li>Canvas 좌표는 왼쪽 위가 (0, 0)이고, y는 아래로 커집니다.</li>
+              <li>게임 루프는 시간 재기 → 계산 → 그리기를 반복합니다.</li>
+              <li><code>x += speed * dt</code>를 쓰면 화면을 몇 번 그리든 같은 시간에 같은 거리를 움직입니다.</li>
+            </ul>
+          </div>
+
+          <p>
+            <strong>다음 주 예고 — 2주차 “자유 이동하는 공”:</strong> 이번에는 x 방향으로만 움직였습니다. 다음 주에는 x와 y
+            방향 속도를 함께 써서 공을 원하는 방향으로 움직이고, 방향과 빠르기를 화살표(벡터)로 나타냅니다.
+          </p>
+
+          <div class="complete-row">
+            <button type="button" class="btn" data-action="toggle-complete" aria-pressed="false">이번 주 학습 완료로 표시</button>
+            <span class="muted">목표를 확인하고 기록을 저장한 뒤 직접 눌러 주세요.</span>
+          </div>
+          <nav class="week-nav" aria-label="주차 이동" data-week-nav style="margin-top: 16px"></nav>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      import { initLesson } from '../js/common.js';
+      import { createLab } from '../simulations/week01.js';
+
+      const lab = createLab(document.querySelector('[data-lab]'));
+      initLesson({ week: 1, lab });
+    </script>
+  </body>
+</html>

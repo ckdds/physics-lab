@@ -1,0 +1,27 @@
+/* 출발 코드 화면 스타일 — 자유롭게 바꿔도 됩니다. */
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: 'Malgun Gothic', system-ui, sans-serif;
+  background: #f4f6fb;
+  color: #1a2236;
+}
+
+h1 {
+  font-size: 1.25rem;
+  margin: 0 0 8px;
+}
+
+p {
+  margin: 0 0 12px;
+  color: #55607a;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16 / 9;
+  background: #0f1b33;
+  border-radius: 10px;
+}
